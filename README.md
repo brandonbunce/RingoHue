@@ -1,4 +1,4 @@
-[https://i.ibb.co/3FpgKdn/icon.png]
+![RingoHueIcon](https://i.ibb.co/3FpgKdn/icon.png)
 # RingoHue
 
 RingoHue allows you to control your Phillips Hue lights from your MAKERphone/Ringo with ease.
