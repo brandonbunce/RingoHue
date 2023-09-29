@@ -71,7 +71,7 @@ void loadConfiguration() {
     // Parse the root object
     JsonObject& root = jsonBuffer.parseObject(configFile);
     if (!root.success()) {
-      Serial.println("Failed to read config.json, falling back to default configuration.");
+      Serial.println("Failed to read config.json, falling back to, and attempting to write placeholder configuration.");
     }
     // Copy values from the JsonObject to the Config struct
     strlcpy(configStruct.ssid,                       // <- destination
@@ -99,7 +99,7 @@ void saveConfiguration() {
 
   configFile = SD.open(configPath, FILE_WRITE);
   if (!configFile) {
-    Serial.println(F("Failed to create config.json!"));
+    Serial.println(F("Failed to create config.json! Did you have it set up properly in the first place?"));
     return;
   }
 
@@ -119,7 +119,7 @@ void saveConfiguration() {
 
   // Serialize JSON to file
   if (root.printTo(configFile) == 0) {
-    Serial.println(F("Failed to write to file"));
+    Serial.println(F("Failed to write to config.json!"));
   }
 
   // Close the file (File's destructor doesn't close the file)
@@ -130,11 +130,11 @@ void setup() {
   // put your setup code here, to run once:
   mp.begin();
   Serial.begin(115200);
-  delay(1000);
+  while (!Serial) continue;
   Serial.println("Welcome to RingoHue!");
 
   while (!SD.begin(5, SPI, 8000000)) {
-    Serial.println(F("Failed to initialize SD library. Cannot continue."));
+    Serial.println(F("Failed to initialize SD library. Is your SD card inserted?"));
     drawStatusMessage("-- Error --", "Insert SD card!");
     delay(10000);
   }
@@ -191,7 +191,7 @@ void connectNetwork() {
       break;
 
     case 6:  // WL_WRONG_PASSWORD
-      Serial.println("Wifi password incorrect! Please reconfigure RingoHue.");
+      Serial.println("WiFi password incorrect! Please reconfigure RingoHue.");
       drawStatusMessage("Connection Failed", "Check password.");
       Serial.println(String(configStruct.ssid) + "didn't work.");
       delay(2000);
@@ -215,7 +215,6 @@ void connectNetwork() {
     case 3:  //WL_CONNECTED
       {
         drawStatusMessage("Connected", WiFi.localIP().toString());
-        // Why in god's name are concatenations done like this.
       }
       break;
 
