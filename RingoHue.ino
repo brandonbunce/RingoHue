@@ -15,8 +15,14 @@ struct ConfigStruct {
   char huebridgeip[64];
 };
 
+const char* ssid_placeholder = "SSID_HERE";
+const char* wpa_key_placeholder = "WPA_KEY_HERE";
+const char* hue_api_key_placeholder = "API_KEY_HERE";
+const char* hue_bridge_ip_placeholder = "BRIDGE_IP_HERE";
+
 const char* configPath = "/RingoHue/config.json";
 ConfigStruct configStruct;
+
 
 void drawStatusMessage(String title = "", String subtitle = "") {
   // Wipe screen
@@ -30,15 +36,39 @@ void drawStatusMessage(String title = "", String subtitle = "") {
   mp.display.setTextColor(TFT_WHITE);
   mp.display.setFreeFont(TT1);
   // Draw title
-  mp.display.drawString(title, 80, 60);
+  // display is 160x128 FYI!
+  mp.display.drawString(title, 82, 60);
   // Smaller text for subtitle
   mp.display.setTextSize(2);
   // Draw subtitle
-  mp.display.drawString(subtitle, 80, 75);
+  mp.display.drawString(subtitle, 82, 75);
   // Print what we just made
   mp.update();
   Serial.println(title);
   Serial.println(subtitle);
+}
+
+void checkConfig() {
+  while (String(configStruct.ssid) == String(ssid_placeholder)) {
+    drawStatusMessage("-- Invalid Config --", "Please set SSID");
+    Serial.println("SSID not configured!");
+    delay(10000);
+  }
+  while (String(configStruct.wpakey) == String(wpa_key_placeholder)) {
+    drawStatusMessage("-- Invalid Config --", "Please set WPA password");
+    Serial.println("WPA password not configured!");
+    delay(10000);
+  }
+  while (String(configStruct.hueapikey) == String(hue_api_key_placeholder)) {
+    drawStatusMessage("-- Invalid Config --", "Please set Hue API Key");
+    Serial.println("API Key not configured!");
+    delay(10000);
+  }
+  while (String(configStruct.huebridgeip) == String(hue_bridge_ip_placeholder)) {
+    drawStatusMessage("-- Invalid Config --", "Please set Bridge IP");
+    Serial.println("Bridge IP not configured!");
+    delay(10000);
+  }
 }
 
 // Prints the content of a file to the Serial
@@ -74,18 +104,18 @@ void loadConfiguration() {
       Serial.println("Failed to read config.json, falling back to, and attempting to write placeholder configuration.");
     }
     // Copy values from the JsonObject to the Config struct
-    strlcpy(configStruct.ssid,                       // <- destination
-            root["ssid"] | "SSID_HERE",              // <- source
-            sizeof(configStruct.ssid));              // <- destination's capacity
-    strlcpy(configStruct.wpakey,                     // <- destination
-            root["wpakey"] | "WPA_HERE",             // <- source
-            sizeof(configStruct.wpakey));            // <- destination's capacity
-    strlcpy(configStruct.hueapikey,                  // <- destination
-            root["hueapikey"] | "API_KEY_HERE",      // <- source
-            sizeof(configStruct.hueapikey));         // <- destination's capacity
-    strlcpy(configStruct.huebridgeip,                // <- destination
-            root["huebridgeip"] | "BRIDGE_IP_HERE",  // <- source
-            sizeof(configStruct.huebridgeip));       // <- destination's capacity
+    strlcpy(configStruct.ssid,                                // <- destination
+            root["ssid"] | ssid_placeholder,                  // <- source
+            sizeof(configStruct.ssid));                       // <- destination's capacity
+    strlcpy(configStruct.wpakey,                              // <- destination
+            root["wpakey"] | wpa_key_placeholder,             // <- source
+            sizeof(configStruct.wpakey));                     // <- destination's capacity
+    strlcpy(configStruct.hueapikey,                           // <- destination
+            root["hueapikey"] | hue_api_key_placeholder,      // <- source
+            sizeof(configStruct.hueapikey));                  // <- destination's capacity
+    strlcpy(configStruct.huebridgeip,                         // <- destination
+            root["huebridgeip"] | hue_bridge_ip_placeholder,  // <- source
+            sizeof(configStruct.huebridgeip));                // <- destination's capacity
 
     // Close the file (File's destructor doesn't close the file)
     configFile.close();
@@ -118,7 +148,7 @@ void saveConfiguration() {
   root["huebridgeip"] = configStruct.huebridgeip;
 
   // Serialize JSON to file
-  if (root.printTo(configFile) == 0) {
+  if (root.prettyPrintTo(configFile) == 0) {
     Serial.println(F("Failed to write to config.json!"));
   }
 
@@ -150,8 +180,9 @@ void setup() {
   // Dump config file
   Serial.println(F("Print config file..."));
   printConfig();
+  // Check if config.json is correct.
+  checkConfig();
 
-  drawScreen();
   connectNetwork();
 }
 
